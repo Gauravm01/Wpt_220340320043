@@ -1,78 +1,79 @@
 
+let db = {
+    host: 'localhost',
+    user: 'root',
+    password: 'cdac',
+    database: 'exam',
+    port: 3306
+};
+
+const mysql = require("mysql2");
+const conn = mysql.createConnection(db);
+
 const express = require('express');
 const app = express();
-const cors = require('cors');
-app.use(cors());
 
-
-const bodyParser = require('body-parser');
-
-
-const mysql =require('mysql2');
-
-
-
-app.use(express.static('abc'));
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true }));
-//whether you want nested objects support  or not
-let dbobj={
-	host:'localhost',
-	user:'root',
-	password:'cdac',
-	database:'exam',
-	port:'3306'
-}
-
-const conn = mysql.createConnection(dbobj);
-
-app.get("/getbookdetails",(req,resp)=>{
-	console.log("getbook fun");
-	let bookid = req.query.bookid;
-	let output = {status:false,bookdetails:{bookid:0,bookname:"",price:0}}
-	conn.query('select bookid,bookname,price from book where bookid =?',[bookid],(error,rows)=>{
-		if(error){
-			console.log(error);
-		}else{
-			if(rows.length>0){
-				console.log("book found")
-				output.status = true;
-				output.bookdetails = rows[0];
-			}else{
-				console.log("book not found");
-			}
-		}
-		console.log(output);
-		console.send(output);
-	});
+app.listen(900, () => {
+    console.log("Browser Listening");
 });
 
 
+app.use(express.static("abc"));
 
-app.get("/updateprice",(req,resp)=>{
+app.get('/getAllItems', (req, res) => {
+    conn.query('select * from book', [],
+        (err, rows) => {
+            res.send(rows);
+            console.log(rows);
+        });
+});
 
-	let bookid = req.query.bookid;
-	let bookprice = req.query.bookprice;
-	let output = false;
+app.get('/getItems', (req, res) => {
 
+    let input = req.query.bookid;
+    let output = { status: false, itemdetails: { bookname: '', price: '' } };
 
-	conn.query('update book set price  =? where bookid = ?',[bookprice,bookid],(error,rows)=>{
-		if(error){
-			console.log(error);
-		}else{
-			if(res.affectedRows>0){
-				console.log("book price updated")
-				output.status = true;
-			
-			}else{
-				console.log("book price not updated");
-			}
-		}
-		resp.send(output);
-	});
+    conn.query('select bookid, bookname,price from book where bookid=?', [input],
+        (err, rows) => {
+            console.log(rows);
+
+            if (err) {
+                console.log(err);
+            } else {
+                if (rows.length > 0) {
+                    output.status = true;
+                    output.itemdetails = rows[0];
+                    console.log(output.itemdetails);
+                }
+            }
+            res.send(output);
+        });
 });
 
 
-app.listen(500, function () {
-    console.log("server listening at port 500...");
+app.get('/updateItems', (req, res) => {
+
+    let input = { bookid: req.query.bookid, bookname: req.query.bookname, price: req.query.price,  };
+
+    let output=false;
+
+    conn.query('update book set price=?,bookname=? where bookid=?', [input.price,input.category,input.bookid],
+        (err, rows) => {
+            console.log(rows);
+
+            if (err) {
+                console.log(err);
+            } else {
+                if (rows.affectedRows > 0) {
+                    output = true;
+                }
+            }
+            res.send(output);
+        });
+});
+
+app.get('/updateItems', (req, res) => {
+
+
+    
 });
